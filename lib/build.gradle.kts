@@ -21,7 +21,8 @@ dependencies {
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
-    val log4j2Version="2.20.0"
+    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    val log4j2Version = "2.20.0"
     implementation("org.apache.logging.log4j:log4j-api:$log4j2Version")
     implementation("org.apache.logging.log4j:log4j-core:$log4j2Version")
     implementation("org.apache.logging.log4j:log4j-slf4j2-impl:$log4j2Version")
@@ -35,6 +36,7 @@ dependencies {
     implementation(kotlin("reflect"))
     implementation("com.microsoft.graph:microsoft-graph:5.77.0")
     implementation("com.azure:azure-identity:1.11.1")
+    implementation("com.microsoft.azure:msal4j:1.14.2")
 }
 
 java {
@@ -49,7 +51,11 @@ tasks.named<Test>("test") {
 
 tasks.jar {
     manifest {
-        attributes(mapOf("Implementation-Title" to project.name,
-            "Implementation-Version" to project.version))
+        attributes(
+            mapOf(
+                "Implementation-Title" to project.name,
+                "Implementation-Version" to project.version
+            )
+        )
     }
 }

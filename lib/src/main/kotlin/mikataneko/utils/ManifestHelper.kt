@@ -1,8 +1,6 @@
 package mikataneko.utils
 
 import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlinx.coroutines.Dispatchers
@@ -19,22 +17,10 @@ import java.nio.file.Path
 import kotlin.io.path.exists
 
 class ManifestHelper(
+    private val client: HttpClient,
+    private val retries: Int,
     private val server: String = "https://piston-meta.mojang.com",
-    private val retry: Int = 5,
 ) {
-    private val client = HttpClient(CIO) {
-        expectSuccess = true
-
-        install(HttpRequestRetry) {
-            retryOnExceptionOrServerErrors(maxRetries = 5)
-            exponentialDelay()
-        }
-
-        install(HttpTimeout) {
-            this.connectTimeoutMillis = 1000
-            this.socketTimeoutMillis = 1000
-        }
-    }
 
     private val downloader = Downloader(client = client)
 
@@ -73,7 +59,7 @@ class ManifestHelper(
         val path = instance.rootDirectory.assetIndexes.resolve("${manifest.assetIndex.id}.json")
         return withContext(Dispatchers.IO) {
             if (!path.exists() || path.sha1() != manifest.assetIndex.sha1) {
-                downloader.getAndSaveAssetIndex(manifest,instance.rootDirectory)
+                downloader.getAndSaveAssetIndex(manifest, instance.rootDirectory)
             }
             loadAssetIndexes(path)
         }
@@ -89,7 +75,7 @@ class ManifestHelper(
                         val resolveValue = it.value.hash.take(2) + "/" + it.value.hash
                         val path = instance.rootDirectory.objects.resolve(resolveValue)
                         if (!path.exists()) {
-                            retryOnException<HashVerificationFailedException>(retry) {
+                            retryOnException<HashVerificationFailedException>(retries) {
                                 downloader.getAndSaveObject(it.value, instance.rootDirectory)
                             }
                         }
@@ -109,8 +95,8 @@ class ManifestHelper(
                         val resolveValue = it.value.hash.take(2) + "/" + it.value.hash
                         val file = instance.rootDirectory.objects.resolve(resolveValue)
                         if (!file.exists() || file.sha1() != it.value.hash) {
-                            retryOnException<HashVerificationFailedException>(retry) {
-                                downloader.getAndSaveObject(it.value,instance.rootDirectory)
+                            retryOnException<HashVerificationFailedException>(retries) {
+                                downloader.getAndSaveObject(it.value, instance.rootDirectory)
                             }
                         }
                     }
@@ -122,7 +108,7 @@ class ManifestHelper(
     suspend fun verifyAndDownloadClientJar(instance: GameInstance) {
         val path = instance.rootDirectory.versions.resolve(instance.id).resolve("${instance.id}.jar")
         if (!path.exists() || path.sha1() != getVersionManifest(instance).downloads.client.sha1) {
-            downloader.getAndSaveClientJar(getVersionManifest(instance), instance.id,instance.rootDirectory)
+            downloader.getAndSaveClientJar(getVersionManifest(instance), instance.id, instance.rootDirectory)
         }
     }
 
@@ -133,8 +119,8 @@ class ManifestHelper(
             resolvedLibraries.map {
                 async {
                     semaphore.withPermit {
-                        retryOnException<HashVerificationFailedException>(retry) {
-                            downloader.getAndSaveLibrary(it,instance.id,instance.rootDirectory)
+                        retryOnException<HashVerificationFailedException>(retries) {
+                            downloader.getAndSaveLibrary(it, instance.id, instance.rootDirectory)
                         }
                     }
                 }
