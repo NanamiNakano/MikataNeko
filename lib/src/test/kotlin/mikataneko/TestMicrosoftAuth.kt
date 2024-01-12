@@ -1,10 +1,18 @@
 package mikataneko
 
-import mikataneko.models.DeviceCodeFlow
-import mikataneko.models.MicrosoftAuthenticator
-import mikataneko.models.TokenCacheAspect
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import mikataneko.models.xbox.DeviceCodeFlow
+import mikataneko.utils.MicrosoftAuthenticator
+import mikataneko.interfaces.TokenCacheAspect
+import mikataneko.models.xbox.XSTSError
+import mikataneko.models.xbox.XSTSSuccess
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
+
+private val json = Json {
+    prettyPrint = true
+}
 
 suspend fun main() {
     val deviceCodeFlow = DeviceCodeFlow(System.getenv("CLIENT_ID"))
@@ -15,11 +23,17 @@ suspend fun main() {
         println(deviceCode.message())
     }
 
-    val token = result.accessToken()
-
-    val response = authenticator.authenticateWithXboxLive(token)
-
-    println(response.token)
+    val accessToken = result.accessToken()
+    val xblResponse = authenticator.authenticateWithXboxLive(accessToken)
+    val xblToken = xblResponse.token
+    val userHash = xblResponse.displayClaims.xui.first().uhs
+    val xstsToken = when (val xstsResponse = authenticator.authorizeWithXSTS(xblToken)) {
+        is XSTSError -> return
+        is XSTSSuccess -> xstsResponse.token
+    }
+    val minecraftToken = authenticator.authenticateWithMinecraft(userHash, xstsToken).accessToken
+    val productList = authenticator.getGameItems(minecraftToken)
+    println(json.encodeToString(productList))
 }
 
 class TokenCacheAspectImpl : TokenCacheAspect() {

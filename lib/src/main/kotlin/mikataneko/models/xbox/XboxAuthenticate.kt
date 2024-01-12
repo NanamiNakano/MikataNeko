@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class XboxAuthenticate(
     @SerialName("Properties")
-    val properties: Properties,
+    val properties: XboxProperties,
     @SerialName("RelyingParty")
     val relyingParty: String = "http://auth.xboxlive.com",
     @SerialName("TokenType")
@@ -15,7 +15,7 @@ data class XboxAuthenticate(
 )
 
 @Serializable
-data class Properties(
+data class XboxProperties(
     @SerialName("RpsTicket")
     val rpsTicket: String,
     @SerialName("AuthMethod")

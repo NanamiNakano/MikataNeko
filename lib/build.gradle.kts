@@ -22,6 +22,7 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-client-auth:$ktorVersion")
     val log4j2Version = "2.20.0"
     implementation("org.apache.logging.log4j:log4j-api:$log4j2Version")
     implementation("org.apache.logging.log4j:log4j-core:$log4j2Version")
@@ -31,11 +32,8 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    api("org.apache.commons:commons-math3:3.6.1")
-    implementation("com.google.guava:guava:32.1.1-jre")
     implementation(kotlin("reflect"))
     implementation("com.microsoft.graph:microsoft-graph:5.77.0")
-    implementation("com.azure:azure-identity:1.11.1")
     implementation("com.microsoft.azure:msal4j:1.14.2")
 }
 

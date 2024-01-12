@@ -23,8 +23,8 @@ import kotlin.io.path.deleteExisting
 import kotlin.text.toByteArray
 
 class Downloader(
-    private val server: String = "https://resources.download.minecraft.net",
     private val client: HttpClient,
+    private val server: String = "https://resources.download.minecraft.net",
 ) {
     suspend fun getAndSaveVersionManifest(instance: GameInstance): MinecraftVersionManifest {
         val path = instance.rootDirectory.versions.resolve(instance.id).resolve("${instance.id}.json")
@@ -41,7 +41,7 @@ class Downloader(
         return minecraftVersion
     }
 
-    suspend fun getAndSaveAssetIndex(manifest: MinecraftVersionManifest,rootDirectory: GameDirectory): AssetIndexes {
+    suspend fun getAndSaveAssetIndex(manifest: MinecraftVersionManifest, rootDirectory: GameDirectory): AssetIndexes {
         val path = rootDirectory.assetIndexes.resolve("${manifest.assetIndex.id}.json")
         val response = withContext(Dispatchers.IO) {
             client.get(manifest.assetIndex.url)
@@ -58,7 +58,7 @@ class Downloader(
         return assetIndexes
     }
 
-    suspend fun getAndSaveObject(target: Object,rootDirectory: GameDirectory) {
+    suspend fun getAndSaveObject(target: Object, rootDirectory: GameDirectory) {
         val resolveValue = target.hash.take(2) + "/" + target.hash
         val url = Url(server).toURI().resolve(resolveValue).toString()
         withContext(Dispatchers.IO) {
@@ -76,7 +76,7 @@ class Downloader(
         }
     }
 
-    suspend fun getAndSaveClientJar(manifest: MinecraftVersionManifest, id: String,rootDirectory: GameDirectory) {
+    suspend fun getAndSaveClientJar(manifest: MinecraftVersionManifest, id: String, rootDirectory: GameDirectory) {
         val path = rootDirectory.versions.resolve(id).resolve("${id}.jar")
         val target = manifest.downloads.client
         withContext(Dispatchers.IO) {
@@ -92,7 +92,7 @@ class Downloader(
         }
     }
 
-    suspend fun getAndSaveLibrary(lib: ResolvedLibrary, id: String,rootDirectory: GameDirectory) {
+    suspend fun getAndSaveLibrary(lib: ResolvedLibrary, id: String, rootDirectory: GameDirectory) {
         when (lib) {
             is NativeLibrary -> {
                 withContext(Dispatchers.IO) {
@@ -156,4 +156,3 @@ private suspend fun HttpClient.downloadFromUrl(url: String): Path {
         tempFile
     }
 }
-

@@ -27,7 +27,12 @@ data class XboxAuthenticateResponse(
 
 @Serializable
 data class DisplayClaims(
-    val xui: List<Map<String, String>>,
+    val xui: List<XboxUserHash>,
+)
+
+@Serializable
+data class XboxUserHash(
+    val uhs: String,
 )
 
 object InstantSerializer : KSerializer<Instant> {

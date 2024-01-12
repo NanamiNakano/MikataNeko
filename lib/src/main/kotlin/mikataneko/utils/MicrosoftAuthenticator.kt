@@ -1,4 +1,4 @@
-package mikataneko.models
+package mikataneko.utils
 
 import com.microsoft.aad.msal4j.*
 import io.ktor.client.*
@@ -7,16 +7,12 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.serialization.json.Json
 import mikataneko.globalClient
-import mikataneko.models.xbox.Properties
-import mikataneko.models.xbox.XboxAuthenticate
-import mikataneko.models.xbox.XboxAuthenticateResponse
+import mikataneko.models.MicrosoftAuthenticatorException
+import mikataneko.models.minecraft.GameItems
+import mikataneko.models.minecraft.MinecraftAuthenticateResponse
+import mikataneko.models.minecraft.XboxMinecraftAuthenticate
+import mikataneko.models.xbox.*
 import java.util.function.Consumer
-
-data class DeviceCodeFlow(
-    val clientId: String,
-    val tenantId: String = "consumers",
-    val scopes: List<String> = listOf("XboxLive.signin", "offline_access", "openid", "profile", "email"),
-)
 
 class MicrosoftAuthenticator(
     tokenCacheAspect: ITokenCacheAccessAspect,
@@ -69,27 +65,46 @@ class MicrosoftAuthenticator(
         return result
     }
 
-    suspend fun authenticateWithXboxLive(token: String): XboxAuthenticateResponse {
+    suspend fun authenticateWithXboxLive(accessToken: String): XboxAuthenticateResponse {
         val response = client.post("https://user.auth.xboxlive.com/user/authenticate") {
             contentType(ContentType.Application.Json)
-            setBody(XboxAuthenticate(Properties("d=$token")))
+            setBody(XboxAuthenticate(XboxProperties("d=$accessToken")))
             accept(ContentType.Application.Json)
         }
         return Json.decodeFromString(response.bodyAsText())
     }
-}
 
-abstract class TokenCacheAspect : ITokenCacheAccessAspect {
-    override fun beforeCacheAccess(iTokenCacheAccessContext: ITokenCacheAccessContext?) {
-        val data = loadCacheData()
-        iTokenCacheAccessContext?.tokenCache()?.deserialize(data)
+    suspend fun authorizeWithXSTS(xblToken: String): XSTSAuthorizeResponse {
+        val response = client.post("https://xsts.auth.xboxlive.com/xsts/authorize") {
+            contentType(ContentType.Application.Json)
+            setBody(XSTSAuthorize(XSTSProperties(listOf(xblToken))))
+            accept(ContentType.Application.Json)
+        }
+
+        if (response.status == HttpStatusCode.Unauthorized) {
+            return Json.decodeFromString<XSTSError>(response.bodyAsText())
+        }
+
+        return Json.decodeFromString<XSTSSuccess>(response.bodyAsText())
     }
 
-    override fun afterCacheAccess(iTokenCacheAccessContext: ITokenCacheAccessContext?) {
-        val data = iTokenCacheAccessContext?.tokenCache()?.serialize()
-        data?.let { saveCacheData(it) }
+    suspend fun authenticateWithMinecraft(userHash: String, xstsToken: String): MinecraftAuthenticateResponse {
+        val response = client.post("https://api.minecraftservices.com/authentication/login_with_xbox") {
+            contentType(ContentType.Application.Json)
+            setBody(XboxMinecraftAuthenticate("XBL3.0 x=$userHash;$xstsToken"))
+            accept(ContentType.Application.Json)
+        }
+
+        return Json.decodeFromString(response.bodyAsText())
     }
 
-    abstract fun loadCacheData(): String
-    abstract fun saveCacheData(data: String)
+    suspend fun getGameItems(minecraftAccessToken: String): GameItems {
+        val response = client.get("https://api.minecraftservices.com/entitlements/mcstore") {
+            header(HttpHeaders.Authorization, "Bearer $minecraftAccessToken")
+        }
+
+        return Json.decodeFromString(response.bodyAsText())
+    }
+
+    
 }
