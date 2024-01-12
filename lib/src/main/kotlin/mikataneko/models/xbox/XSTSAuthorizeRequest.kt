@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class XSTSAuthorize(
+data class XSTSAuthorizeRequest(
     @SerialName("Properties")
     val xstsProperties: XSTSProperties,
     @SerialName("RelyingParty")

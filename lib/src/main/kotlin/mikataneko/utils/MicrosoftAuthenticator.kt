@@ -8,9 +8,7 @@ import io.ktor.http.*
 import kotlinx.serialization.json.Json
 import mikataneko.globalClient
 import mikataneko.models.MicrosoftAuthenticatorException
-import mikataneko.models.minecraft.GameItems
-import mikataneko.models.minecraft.MinecraftAuthenticateResponse
-import mikataneko.models.minecraft.XboxMinecraftAuthenticate
+import mikataneko.models.minecraft.*
 import mikataneko.models.xbox.*
 import java.util.function.Consumer
 
@@ -68,7 +66,7 @@ class MicrosoftAuthenticator(
     suspend fun authenticateWithXboxLive(accessToken: String): XboxAuthenticateResponse {
         val response = client.post("https://user.auth.xboxlive.com/user/authenticate") {
             contentType(ContentType.Application.Json)
-            setBody(XboxAuthenticate(XboxProperties("d=$accessToken")))
+            setBody(XboxAuthenticateRequest(XboxProperties("d=$accessToken")))
             accept(ContentType.Application.Json)
         }
         return Json.decodeFromString(response.bodyAsText())
@@ -77,7 +75,7 @@ class MicrosoftAuthenticator(
     suspend fun authorizeWithXSTS(xblToken: String): XSTSAuthorizeResponse {
         val response = client.post("https://xsts.auth.xboxlive.com/xsts/authorize") {
             contentType(ContentType.Application.Json)
-            setBody(XSTSAuthorize(XSTSProperties(listOf(xblToken))))
+            setBody(XSTSAuthorizeRequest(XSTSProperties(listOf(xblToken))))
             accept(ContentType.Application.Json)
         }
 
@@ -106,5 +104,15 @@ class MicrosoftAuthenticator(
         return Json.decodeFromString(response.bodyAsText())
     }
 
-    
+    suspend fun getProfile(minecraftAccessToken: String): ProfileResponse {
+        val response = client.get("https://api.minecraftservices.com/minecraft/profile") {
+            header(HttpHeaders.Authorization, "Bearer $minecraftAccessToken")
+        }
+
+        if (response.status == HttpStatusCode.NotFound) {
+            return Json.decodeFromString<NotFoundProfile>(response.bodyAsText())
+        }
+
+        return Json.decodeFromString<FoundProfile>(response.bodyAsText())
+    }
 }

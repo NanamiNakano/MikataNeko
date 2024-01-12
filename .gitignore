@@ -6,5 +6,6 @@ build
 
 # test directory
 .minecraft
+.mikataneko
 
 .idea

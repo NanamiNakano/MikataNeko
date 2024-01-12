@@ -35,6 +35,8 @@ dependencies {
     implementation(kotlin("reflect"))
     implementation("com.microsoft.graph:microsoft-graph:5.77.0")
     implementation("com.microsoft.azure:msal4j:1.14.2")
+
+    
 }
 
 java {

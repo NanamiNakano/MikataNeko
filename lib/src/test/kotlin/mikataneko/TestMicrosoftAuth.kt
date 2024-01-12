@@ -1,27 +1,41 @@
 package mikataneko
 
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import mikataneko.models.xbox.DeviceCodeFlow
-import mikataneko.utils.MicrosoftAuthenticator
 import mikataneko.interfaces.TokenCacheAspect
+import mikataneko.models.xbox.DeviceCodeFlow
 import mikataneko.models.xbox.XSTSError
 import mikataneko.models.xbox.XSTSSuccess
-import kotlin.io.path.readText
-import kotlin.io.path.writeText
-
-private val json = Json {
-    prettyPrint = true
-}
+import mikataneko.utils.MicrosoftAuthenticator
+import kotlin.io.path.*
 
 suspend fun main() {
     val deviceCodeFlow = DeviceCodeFlow(System.getenv("CLIENT_ID"))
     val tokenCacheAspect = TokenCacheAspectImpl()
 
     val authenticator = MicrosoftAuthenticator(tokenCacheAspect, deviceCodeFlow)
-    val result = authenticator.authenticateWithDeviceCode { deviceCode ->
-        println(deviceCode.message())
+    val accounts = authenticator.getCachedAccounts()
+    println(accounts)
+
+    val account = if (accounts.isEmpty()) {
+        null
+    } else {
+        accounts.first()
     }
+    println(account)
+
+    val result = if (account != null) {
+        authenticator.authenticateWithDeviceCode(account) { deviceCode ->
+            println(deviceCode.message())
+        }
+    } else {
+        authenticator.authenticateWithDeviceCode { deviceCode ->
+            println(deviceCode.message())
+        }
+    }
+
+//    val result = authenticator.authenticateWithDeviceCode { deviceCode ->
+//        println(deviceCode.message())
+//    }
 
     val accessToken = result.accessToken()
     val xblResponse = authenticator.authenticateWithXboxLive(accessToken)
@@ -32,18 +46,22 @@ suspend fun main() {
         is XSTSSuccess -> xstsResponse.token
     }
     val minecraftToken = authenticator.authenticateWithMinecraft(userHash, xstsToken).accessToken
-    val productList = authenticator.getGameItems(minecraftToken)
-    println(json.encodeToString(productList))
+    val profile = authenticator.getProfile(minecraftToken)
+    println(profile)
 }
 
 class TokenCacheAspectImpl : TokenCacheAspect() {
-    private val file = kotlin.io.path.createTempFile()
+    private val file = Path("./.mikataneko/tokenCacheAspectPersistence").apply {
+        if (!this.exists()) {
+            this.createParentDirectories().createFile()
+        }
+    }
+
     override fun loadCacheData(): String {
         return file.readText()
     }
 
     override fun saveCacheData(data: String) {
         file.writeText(data)
-        file.toFile().deleteOnExit()
     }
 }

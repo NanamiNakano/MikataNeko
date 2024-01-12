@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class XboxAuthenticate(
+data class XboxAuthenticateRequest(
     @SerialName("Properties")
     val properties: XboxProperties,
     @SerialName("RelyingParty")

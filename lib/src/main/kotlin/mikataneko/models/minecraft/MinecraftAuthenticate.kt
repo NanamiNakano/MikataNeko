@@ -2,7 +2,7 @@ package mikataneko.models.minecraft
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 
 
@@ -16,7 +16,7 @@ data class XboxMinecraftAuthenticate(
 @Serializable
 data class MinecraftAuthenticateResponse(
     val username: String,
-    val roles: JsonElement,
+    val roles: JsonArray,
     val metadata: JsonObject,
     @SerialName("access_token")
     val accessToken: String,
