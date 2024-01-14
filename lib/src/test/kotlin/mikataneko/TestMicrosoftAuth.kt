@@ -1,6 +1,5 @@
 package mikataneko
 
-import kotlinx.serialization.json.Json
 import mikataneko.interfaces.TokenCacheAspect
 import mikataneko.models.xbox.DeviceCodeFlow
 import mikataneko.models.xbox.XSTSError
@@ -45,7 +44,9 @@ suspend fun main() {
         is XSTSError -> return
         is XSTSSuccess -> xstsResponse.token
     }
-    val minecraftToken = authenticator.authenticateWithMinecraft(userHash, xstsToken).accessToken
+
+    val minecraftResponse = authenticator.authenticateWithMinecraft(userHash, xstsToken)
+    val minecraftToken = minecraftResponse.accessToken
     val profile = authenticator.getProfile(minecraftToken)
     println(profile)
 }

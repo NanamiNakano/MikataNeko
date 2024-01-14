@@ -19,7 +19,9 @@ class MicrosoftAuthenticator(
 ) {
     private var pca: PublicClientApplication = PublicClientApplication.builder(deviceCodeFlow.clientId)
         .authority("https://login.microsoftonline.com/" + deviceCodeFlow.tenantId)
-        .setTokenCacheAccessAspect(tokenCacheAspect).build()
+        .setTokenCacheAccessAspect(tokenCacheAspect)
+        .applicationName("aaa")
+        .build()
         ?: throw MicrosoftAuthenticatorException("build public client application failed")
 
     fun getCachedAccounts(): Set<IAccount> {

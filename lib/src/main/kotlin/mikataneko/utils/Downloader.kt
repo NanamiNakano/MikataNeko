@@ -80,15 +80,7 @@ class Downloader(
         val path = rootDirectory.versions.resolve(id).resolve("${id}.jar")
         val target = manifest.downloads.client
         withContext(Dispatchers.IO) {
-            val tempFile = async { client.downloadFromUrl(target.url) }.await()
-
-            if (tempFile.sha1() != target.sha1) {
-                throw HashVerificationFailedException("client jar: ${manifest.id}.jar")
-            }
-
-            Files.createDirectories(path.parent)
-            Files.copy(tempFile, path, StandardCopyOption.REPLACE_EXISTING)
-            tempFile.deleteExisting()
+            downloadSingleFile(target, path)
         }
     }
 
@@ -125,7 +117,7 @@ class Downloader(
                 withContext(Dispatchers.IO) {
                     val path = rootDirectory.libraries.resolve(lib.path)
                     Files.createDirectories(path.parent)
-                    val tempFile = async { client.downloadFromUrl(lib.url) }.await()
+                    val tempFile = client.downloadFromUrl(lib.url)
 
                     if (tempFile.sha1() != lib.sha1) {
                         throw HashVerificationFailedException("library: ${lib.name}")
@@ -136,6 +128,21 @@ class Downloader(
                 }
             }
         }
+    }
+
+    suspend fun downloadSingleFile(file: FileDownload, savePath: Path) {
+        withContext(Dispatchers.IO) {
+            val tempFile = client.downloadFromUrl(file.url)
+
+            if (tempFile.sha1() != file.sha1) {
+                throw HashVerificationFailedException("failed to verify: ${file.url}")
+            }
+
+            Files.createDirectories(savePath.parent)
+            Files.copy(tempFile, savePath, StandardCopyOption.REPLACE_EXISTING)
+            tempFile.toFile().deleteOnExit()
+        }
+
     }
 }
 

@@ -1,6 +1,5 @@
 package mikataneko.models
 
-import io.ktor.http.content.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -11,8 +10,6 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
-import mikataneko.utils.Arch
-import mikataneko.utils.Platform
 import mikataneko.utils.getArch
 import mikataneko.utils.getPlatform
 
@@ -123,7 +120,8 @@ sealed class JvmArgument
 @Serializable
 data class JvmArgumentClass(
     val rules: List<Rule>? = null,
-    val value: JsonElement,
+    @Serializable(with = StringOrArraySerializer::class)
+    val value: List<String>,
 ) : JvmArgument()
 
 @Serializable(with = StringArgumentSerializer::class)
@@ -185,9 +183,9 @@ data class Library(
         var allowed = true
 
         rules?.forEach {
-            val ruleOS = (it.os ?: return null).name
+            val ruleOS = it.os?.name ?: return null
 
-            if (ruleOS == null || ruleOS == os.detail) {
+            if (ruleOS == os.detail) {
                 when (it.action) {
                     "disallow" -> allowed = false
                     "allow" -> allowed = true

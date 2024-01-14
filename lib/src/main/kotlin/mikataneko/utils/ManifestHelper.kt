@@ -36,7 +36,7 @@ class ManifestHelper(
 
     }
 
-    private suspend fun getVersionManifest(instance: GameInstance): MinecraftVersionManifest {
+    suspend fun getVersionManifest(instance: GameInstance): MinecraftVersionManifest {
         val path = instance.rootDirectory.versions.resolve(instance.id).resolve("${instance.id}.json")
         return withContext(Dispatchers.IO) {
             if (!path.exists()) {
@@ -125,6 +125,15 @@ class ManifestHelper(
                     }
                 }
             }.awaitAll()
+        }
+    }
+
+    suspend fun downloadLoggingConfig(instance: GameInstance) {
+        val manifest = getVersionManifest(instance)
+        val file = manifest.logging.client.file
+        val path = instance.rootDirectory.path.resolve(file.id!!)
+        withContext(Dispatchers.IO) {
+            downloader.downloadSingleFile(file, path)
         }
     }
 }
