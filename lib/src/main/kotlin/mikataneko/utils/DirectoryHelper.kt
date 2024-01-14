@@ -13,6 +13,7 @@ data class GameDirectory(
     val assetIndexes: Path = assets.resolve("indexes"),
     val objects: Path = assets.resolve("objects"),
     val legacy: Path = assets.resolve("virtual/legacy"),
+    val natives: Path = path.resolve("natives"),
 )
 
 fun loadGameDirectory(path: Path): GameDirectory {

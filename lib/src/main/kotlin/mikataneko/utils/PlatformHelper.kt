@@ -24,16 +24,24 @@ fun getArch(): Arch {
     }
 }
 
-enum class Platform(val detail:String,val key: String) {
-    WINDOWS("windows","windows"),
-    OSX("osx","macos"),
-    LINUX("linux","linux"),
-    UNIVERSAL("",""),
+fun getClassSeperator(): String {
+    return if (getPlatform() == Platform.WINDOWS) {
+        ";"
+    } else {
+        ":"
+    }
+}
+
+enum class Platform(val detail: String, val key: String) {
+    WINDOWS("windows", "windows"),
+    OSX("osx", "macos"),
+    LINUX("linux", "linux"),
+    UNIVERSAL("", ""),
 }
 
 enum class Arch(val detail: String, val type: String) {
     ARM64("-arm64", "64"),
     X86("-x86", "32"),
-    X64("","64"),
-    UNIVERSAL("","")
+    X64("", "64"),
+    UNIVERSAL("", "")
 }

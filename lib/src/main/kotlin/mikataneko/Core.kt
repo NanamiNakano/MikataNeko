@@ -5,11 +5,17 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
-import mikataneko.models.*
+import mikataneko.models.GameInstance
+import mikataneko.models.JvmArgumentClass
+import mikataneko.models.StringArgument
 import mikataneko.models.minecraft.FoundProfile
 import mikataneko.models.minecraft.GameInstanceConfig
 import mikataneko.utils.*
+import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.*
+import kotlin.io.path.exists
+import kotlin.io.path.reader
 
 
 val globalClient by lazy {
@@ -29,6 +35,18 @@ val globalClient by lazy {
         install(ContentNegotiation) {
             json()
         }
+    }
+}
+
+const val launcherCoreName = "MikataNeko"
+val launcherCoreVersion: String by lazy {
+    val properties = Properties()
+    val propertiesFile: Path = Path.of("version.properties")
+    if (propertiesFile.exists()) {
+        properties.load(propertiesFile.reader())
+        properties.getProperty("version")
+    } else {
+        ""
     }
 }
 
@@ -116,10 +134,14 @@ class Core(
                     is StringArgument -> argument.value
                 }
             }
-            return "$jvmArgument $loggingArgument ${manifest.mainClass} ${gameArguments.joinToString(" ")}"
+
+            val modifiedJvmArgument = jvmArgument.replace("\${launcher_name}", launcherCoreName)
+                .replace("\${launcher_version}", launcherCoreVersion)
+                .replace("\${natives_directory}", instance.rootDirectory.natives.toString())
+                .replace("\${classpath}", manifestHelper.listJars(instance).joinToString(getClassSeperator()))
+            return "$modifiedJvmArgument $loggingArgument ${manifest.mainClass} ${gameArguments.joinToString(" ")}"
         }
 
         return "$loggingArgument ${manifest.mainClass} ${gameArguments.joinToString(" ")}"
     }
-
 }

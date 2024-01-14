@@ -54,3 +54,10 @@ tasks.jar {
         )
     }
 }
+
+tasks.register("writeVersionProperties") {
+    doLast {
+        val propertiesFile = File(project.projectDir, "version.properties")
+        propertiesFile.writeText("version=${project.version}")
+    }
+}

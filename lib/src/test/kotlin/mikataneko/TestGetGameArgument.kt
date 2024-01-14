@@ -15,8 +15,8 @@ suspend fun main() {
     run {
         with(core) {
             val versionManifest = manifestHelper.getLatestVersionManifest()
-            val release = versionManifest.version("1.8.9")!!
-            val instance = GameInstance(release, gameDirectory)
+            val release = versionManifest.version("1.20.4")!!
+            val instance = GameInstance(release, gameDirectory, isolation = false)
             val time = measureTime {
                 manifestHelper.verifyObjects(instance, 64)
                 manifestHelper.verifyAndDownloadClientJar(instance)

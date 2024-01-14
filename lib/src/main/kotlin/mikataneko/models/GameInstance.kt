@@ -8,7 +8,7 @@ class GameInstance(
     val version: Version,
     directory: GameDirectory,
     val id: String = version.id,
-    isolation: Boolean = true,
+    val isolation: Boolean = true,
 ) {
     var rootDirectory: GameDirectory
 

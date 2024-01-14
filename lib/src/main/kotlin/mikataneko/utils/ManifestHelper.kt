@@ -136,6 +136,18 @@ class ManifestHelper(
             downloader.downloadSingleFile(file, path)
         }
     }
+
+    suspend fun listJars(instance: GameInstance): List<Path> {
+        val jarList: MutableList<Path> = mutableListOf()
+        jarList.add(instance.rootDirectory.versions.resolve("${instance.id}.jar"))
+        val manifest = getVersionManifest(instance)
+        val libs = manifest.libraries.mapNotNull(Library::resolve).filterIsInstance<UniversalLibrary>()
+        jarList.addAll(libs.map {
+            instance.rootDirectory.libraries.resolve(it.path)
+        })
+        return jarList
+    }
+
 }
 
 inline fun <reified T : Exception> retryOnException(retries: Int, block: () -> Unit) {
